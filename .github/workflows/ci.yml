@@ -1,0 +1,25 @@
+name: Reproduce rustup#3255
+
+on: push
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install `cross`
+        run: cargo install cross --git https://github.com/cross-rs/cross
+      - name: Install Rust components
+        run: |
+          rustup toolchain install nightly-2024-09-30
+          rustup default nightly-2023-09-30
+          rustup target add aarch64-unknown-linux-gnu
+          rustup component add rust-src rustc-dev-aarch64-unknown-linux-gnu llvm-tools
+      - name: "`cargo`: Cross compile to `aarch64-unknown-linux-gnu`"
+        run: cargo -v build --locked --release --target aarch64-unknown-linux-gnu
+      - name: "`cross`: Cross compile to `aarch64-unknown-linux-gnu`"
+        run: CROSS_NO_WARNINGS=0 cross -v build --locked --release --target aarch64-unknown-linux-gnu
